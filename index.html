@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+
+    <section>
+        <div class="container">
+            <div class="game-area"></div>
+        </div>
+    </section>
+
+
+    <div class="game-popup">
+        <div class="box">
+            <div class="inner">
+                <h1>Mini Burnout Paradise</h1>
+                <img src="./img/img.jpg" alt="img">
+                <button>Start Game</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Game functionality start
+        let gameArea, gameAreaWidth, gameAreaHeight, repeatFun;
+        var loose;
+        function gameStart() {
+            console.clear();
+            gameArea = document.querySelector(".game-area");
+            gameAreaWidth = gameArea.clientWidth;
+            gameAreaHeight = gameArea.clientHeight;
+            gameArea.classList.add("start");
+
+            // add player car in gameArea
+            function addPlayerCar() {
+                let playerCar = document.createElement("div");
+                playerCar.setAttribute("class", "player");
+                gameArea.appendChild(playerCar);
+            }
+            addPlayerCar();
+
+            // target player Element
+            let player, playerPosX, playerPosY, playerWidth, playerHeight, playerStep;
+            player = document.querySelector(".player");
+            playerPosY = player.offsetTop;
+            playerPosX = player.offsetLeft;
+            playerWidth = player.clientWidth;
+            playerHeight = player.clientHeight;
+            playerStep = 20;
+
+
+            // key variables
+            let keyUsed, currKey;
+            keyUsed = {
+                ArrowUp: false,
+                ArrowRight: false,
+                ArrowDown: false,
+                ArrowLeft: false,
+            };
+
+            // function for update Player Position
+            function updatePlayerPosition() {
+                player.style.top = playerPosY + "px";
+                player.style.left = playerPosX + "px";
+            }
+
+            // function for active key
+            function movePlayerFun(e) {
+                if ((keyUsed.ArrowUp == true) && (playerPosY > 0 + 50)) {
+                    playerPosY = playerPosY - playerStep;
+                } else if ((keyUsed.ArrowRight == true) && (playerPosX < (gameAreaWidth - playerWidth))) {
+                    playerPosX = playerPosX + playerStep;
+                } else if ((keyUsed.ArrowDown == true) && (playerPosY < (gameAreaHeight - playerHeight) - 10)) {
+                    playerPosY = playerPosY + playerStep;
+                } else if ((keyUsed.ArrowLeft == true) && (playerPosX > 0)) {
+                    playerPosX = playerPosX - playerStep;
+                }
+                updatePlayerPosition();
+            }
+
+            function activeCurrKey(e) {
+                currKey = e.key;
+                for (const key in keyUsed) {
+                    if (currKey == key) {
+                        keyUsed[key] = true;
+                    } else {
+                        keyUsed[key] = false;
+                    }
+                }
+                movePlayerFun(e);
+            }
+            document.addEventListener("keydown", activeCurrKey);
+
+            // inActiveKeys function
+            function inActiveKeys(e) {
+                keyUsed[currKey] = false;
+            }
+            document.addEventListener("keyup", inActiveKeys);
+
+
+            // add enemy cars
+            let enemyCar, enemyCarPosX, enemyCarPosY, ranAnimationDelay, gameSpeedMax, gameSpeedMin, allEnemyCars;
+            gameSpeedMax = 7, gameSpeedMin = 5;
+            function enemyCars() {
+                for (let i = 0; i < 3; i++) {
+                    enemyCar = document.createElement("div");
+                    enemyCar.setAttribute("class", "enemy");
+                    gameArea.appendChild(enemyCar);
+                    enemyCarPosY = Math.floor(Math.random() * (gameAreaHeight - playerHeight));
+                    enemyCarPosX = Math.floor(Math.random() * (gameAreaWidth - playerWidth));
+                    enemyCar.style.left = enemyCarPosX + "px";
+                    enemyCar.style.top = -500 + "px";
+                    ranAnimationDelay = Math.floor(Math.random() * (gameSpeedMax - gameSpeedMin)) + gameSpeedMin;
+                    enemyCar.style.animationDelay = ranAnimationDelay + "s";
+                }
+            }
+            enemyCars();
+
+            // check if element Touch another element using collide function
+            function isCollide(a, b) {
+                var aRect = a.getBoundingClientRect();
+                var bRect = b.getBoundingClientRect();
+
+                return !(
+                    ((aRect.top + aRect.height) < (bRect.top)) ||
+                    (aRect.top > (bRect.top + bRect.height)) ||
+                    ((aRect.left + aRect.width) < bRect.left) ||
+                    (aRect.left > (bRect.left + bRect.width))
+                );
+            }
+
+            // continuously run function with requestAnimationFrame
+            let currCarPosX, currCarPosY;
+
+            let i = 0;
+            function checkCarsRunning() {
+                allEnemyCars = document.querySelectorAll(".enemy");
+                for (const car of allEnemyCars) {
+                    // random position change enemy car
+                    currCarPosX = car.offsetLeft;
+                    currCarPosY = car.offsetTop;
+                    if (currCarPosY <= -450) {
+                        enemyCarPosX = Math.floor(Math.random() * (gameAreaWidth - playerWidth));
+                        car.style.left = enemyCarPosX + "px";
+                        ranAnimationDelay = Math.floor(Math.random() * (gameSpeedMax - gameSpeedMin)) + gameSpeedMin;
+                        car.style.animationDelay = ranAnimationDelay + "s";
+                    }
+                    // check if is isCollide then stop the game
+                    isCollide(car, player);
+                    if (isCollide(car, player)) {
+                        if (i == 0) {
+                            debugger
+                            console.log("a");
+                            gamePlayCheckFunction(loose);
+                            loose = true;
+                            i++;
+                        }
+                    };
+                }
+                repeatFun = requestAnimationFrame(checkCarsRunning);
+            }
+            repeatFun = requestAnimationFrame(checkCarsRunning);
+        }
+
+
+        let isGameStart = false;
+        let gamePopup = document.querySelector(".game-popup");
+        let gamePopupTitle = document.querySelector(".game-popup h1");
+        let gamePopupBtn = document.querySelector(".game-popup .box button");
+
+
+        function gameStop() {
+            gamePopup.classList.remove("hide");
+            gamePopupTitle.innerText = "Game Over";
+            gamePopupBtn.innerText = "Play Again";
+            gameArea.classList.remove("start");
+            // cancel continuously run function with requestAnimationFrame
+            cancelAnimationFrame(repeatFun);
+        }
+
+
+        function gamePlayCheckFunction(looseVal) {
+            if (!isGameStart) {
+                gameStart();
+                isGameStart = true;
+            } else if (!looseVal) {
+                gameStop();
+                looseVal = true;
+            } else {
+                window.location.reload();
+            }
+        }
+
+
+        function gameModalOpen() {
+            gamePopupBtn.onclick = function (e) {
+                gamePopup.classList.add("hide");
+                gamePlayCheckFunction(loose);
+            }
+        }
+
+
+        function afterLoadFun() {
+            gameModalOpen();
+        }
+        window.addEventListener("load", afterLoadFun);
+        // Game functionality end
+
+    </script>
+
+</body>
+
+</html>
